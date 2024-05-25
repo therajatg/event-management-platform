@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-export const eventSchema = new mongoose.Schema({
+const eventSchema = new mongoose.Schema({
   title: { type: String, required: [true, "Please provide event title"] },
   description: { type: String, required: [true, "Please provide description"] },
   date: { type: Date, required: [true, "Please provide the event date"] }, //I think it already contains the time but will worry abiut this later
@@ -14,3 +14,5 @@ export const eventSchema = new mongoose.Schema({
 });
 
 //Organizers can also attend events
+
+export const Event = mongoose.model("Event", eventSchema);

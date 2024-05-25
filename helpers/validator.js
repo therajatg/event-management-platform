@@ -1,4 +1,4 @@
-class Validator {
+export class Validator {
   static validateUserInfo(userInfo) {
     if (
       userInfo.hasOwnProperty("name") &&
@@ -9,11 +9,10 @@ class Validator {
       typeof userInfo.email === "string" &&
       typeof userInfo.password === "string" &&
       typeof userInfo.isOrganizer === "boolean" &&
-      userInfo.name.trim() !== ""
+      userInfo.name.trim() !== "" &&
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userInfo.email)
     ) {
       return { status: true, message: "Validated Successfully" };
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
-      return { status: false, message: "Please provide a valid email" };
     } else {
       return { status: false, message: "User info is malformed" };
     }
@@ -47,6 +46,25 @@ class Validator {
     const currentDate = new Date();
     const eventDate = new Date(parsedDate);
     return eventDate >= currentDate;
+  }
+
+  static validateLoginInfo(emailAndPassword) {
+    if (
+      emailAndPassword.hasOwnProperty("email") &&
+      emailAndPassword.hasOwnProperty("password") &&
+      typeof emailAndPassword.email === "string" &&
+      typeof emailAndPassword.password === "string"
+    ) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailAndPassword.email)) {
+        return { status: false, message: "Invalid Email" };
+      } else if (emailAndPassword.password.trim() === "") {
+        return { status: false, message: "Invalid Password" };
+      } else {
+        return { status: true, message: "Valid Credentials" };
+      }
+    } else {
+      return { status: false, message: "Invalid Credentials" };
+    }
   }
 }
 
