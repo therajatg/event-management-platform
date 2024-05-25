@@ -4,6 +4,7 @@ import { verifyToken } from "./middleware/authJWT.js";
 import mongoose from "mongoose";
 import { Validator } from "./helpers/validator.js";
 import { User } from "./models/user.js";
+import { Event } from "./models/event.js";
 import { compareSync, hashSync } from "bcrypt";
 import jwt from "jsonwebtoken";
 
@@ -66,9 +67,73 @@ app.post("/login", (req, res) => {
   }
 });
 
-app.post("/events", verifyToken, (req, res) => {});
+app.post("/events", verifyToken, (req, res) => {
+  if (req.user) {
+    try {
+      const validatorResponse = Validator.validateEventInfo(req.body);
+      if (validatorResponse.status) {
+        if (!req.user.isOrganizer) {
+          return res
+            .status(400)
+            .json({ message: "Participants cannot organize an event" });
+        }
+        const event = new Event(req.body);
+        event
+          .save()
+          .then((event) => {
+            return res
+              .status(200)
+              .json({ message: "Event Creation Successful" });
+          })
+          .catch((err) => {
+            if (err.status === 404) {
+              return res.status(404).json({ message: err.message });
+            }
+            return res.status(500).json({ message: "Internal Server Error" });
+          });
+      } else {
+        return res.status(400).json({ message: validatorResponse.message });
+      }
+    } catch (error) {
+      return res.status(500).json({ message: "Internal Server Error" });
+    }
+  } else {
+    return res.status(req.status).json({ message: req.message });
+  }
+});
 
-app.put("/events/:id", verifyToken, (req, res) => {});
+app.put("/events/:id", verifyToken, (req, res) => {
+  if (req.user) {
+    try {
+      const validatorResponse = Validator.validateEventInfo(req.body);
+      if (validatorResponse.status) {
+        if (!req.user.isOrganizer) {
+          return res
+            .status(400)
+            .json({ message: "Participants cannot modify an event" });
+        }
+        Event.findByIdAndUpdate(req.params.id, req.body)
+          .then((event) => {
+            return res
+              .status(200)
+              .json({ message: "Event updated successfully" });
+          })
+          .catch((err) => {
+            if (err.status === 404) {
+              return res.status(404).json({ message: err.message });
+            }
+            return res.status(500).json({ message: "Internal Server Error" });
+          });
+      } else {
+        return res.status(400).json({ message: validatorResponse.message });
+      }
+    } catch (error) {
+      return res.status(500).json({ message: "Internal Server Error" });
+    }
+  } else {
+    return res.status(req.status).json({ message: req.message });
+  }
+});
 
 app.post("/events/:id/register", (req, res) => {});
 

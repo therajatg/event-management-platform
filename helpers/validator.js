@@ -1,3 +1,5 @@
+import mongoose from "mongoose";
+
 export class Validator {
   static validateUserInfo(userInfo) {
     if (
@@ -27,12 +29,11 @@ export class Validator {
       eventInfo.hasOwnProperty("organizer") &&
       typeof eventInfo.title === "string" &&
       typeof eventInfo.description === "string" &&
-      Array.isArray(eventInfo.participants) &&
-      typeof eventInfo.organizer === "string"
+      Validator.isValidParticipants(eventInfo.participants) &&
+      Validator.isValidObjectId(eventInfo.organizer) &&
+      Validator.validateDate(eventInfo.date)
     ) {
       return { status: true, message: "Validated Successfully" };
-    } else if (!Validator.validateDate(eventInfo.date)) {
-      return { status: false, message: "Invalid date" };
     } else {
       return { status: false, message: "Event info is malformed" };
     }
@@ -46,6 +47,23 @@ export class Validator {
     const currentDate = new Date();
     const eventDate = new Date(parsedDate);
     return eventDate >= currentDate;
+  }
+
+  static isValidObjectId(id) {
+    return mongoose.Types.ObjectId.isValid(id);
+  }
+
+  static isValidParticipants(participants) {
+    if (!Array.isArray(participants)) {
+      return false;
+    } else if (participants.length > 0) {
+      for (let id in participants) {
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 
   static validateLoginInfo(emailAndPassword) {

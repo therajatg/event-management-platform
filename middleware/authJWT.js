@@ -26,5 +26,6 @@ export const verifyToken = (req, res, next) => {
     req.user = undefined;
     req.message = "Authorization header not found";
     req.status = 401;
+    next();
   }
 };
