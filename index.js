@@ -144,7 +144,47 @@ app.put("/events/:id", verifyToken, (req, res) => {
   }
 });
 
-app.post("/events/:id/register", (req, res) => {});
+//one more condition: One cannot register for own event
+app.post("/events/:id/register", verifyToken, (req, res) => {
+  if (req.user) {
+    const eventId = req.params.id;
+    const userId = req.user._id;
+    try {
+      const validatorResponse = Validator.isValidObjectId(eventId);
+      if (validatorResponse) {
+        Event.findById(eventId).then((event) => {
+          if (event) {
+            if (event.participants.includes(userId)) {
+              return res
+                .status(400)
+                .json({ message: "User is already registered for this event" });
+            } else {
+              event.participants.push(userId);
+              event
+                .save()
+                .then((response) => {
+                  return res
+                    .status(200)
+                    .json({ message: "Successfully registered for the event" });
+                })
+                .catch((err) => {
+                  return res
+                    .status(500)
+                    .json({ message: "Internal Server Error" });
+                });
+            }
+          } else {
+            return res.status(404).json({ message: "Event not found" });
+          }
+        });
+      } else {
+        return res.status(400).json({ message: "Invalid Event ID" });
+      }
+    } catch (error) {}
+  } else {
+    return res.status(req.status).json({ message: req.message });
+  }
+});
 
 if (process.env.NODE_ENV != "test") {
   try {
