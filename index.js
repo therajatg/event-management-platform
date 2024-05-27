@@ -86,8 +86,8 @@ app.post("/events", verifyToken, (req, res) => {
               .json({ message: "Event Creation Successful" });
           })
           .catch((err) => {
-            if (err.status === 404) {
-              return res.status(404).json({ message: err.message });
+            if (err.status === 400) {
+              return res.status(err.status).json({ message: err.message });
             }
             return res.status(500).json({ message: "Internal Server Error" });
           });
@@ -112,15 +112,24 @@ app.put("/events/:id", verifyToken, (req, res) => {
             .status(400)
             .json({ message: "Participants cannot modify an event" });
         }
-        Event.findByIdAndUpdate(req.params.id, req.body)
-          .then((event) => {
+        Event.findOneAndUpdate({ _id: req.params.id }, req.body, {
+          new: true,
+          runValidators: true,
+        })
+          .then((updatedUser) => {
+            if (!updatedUser) {
+              return res
+                .status(404)
+                .json({ message: "Event with the given ID not found" });
+            }
             return res
               .status(200)
               .json({ message: "Event updated successfully" });
           })
           .catch((err) => {
-            if (err.status === 404) {
-              return res.status(404).json({ message: err.message });
+            if (err.status === 400) {
+              // console.log(err);
+              return res.status(err.status).json({ message: err.message });
             }
             return res.status(500).json({ message: "Internal Server Error" });
           });

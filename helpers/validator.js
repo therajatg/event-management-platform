@@ -57,8 +57,9 @@ export class Validator {
     if (!Array.isArray(participants)) {
       return false;
     } else if (participants.length > 0) {
-      for (let id in participants) {
+      for (let id of participants) {
         if (!mongoose.Types.ObjectId.isValid(id)) {
+          console.log(id);
           return false;
         }
       }
