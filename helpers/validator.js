@@ -12,6 +12,7 @@ export class Validator {
       typeof userInfo.password === "string" &&
       typeof userInfo.isOrganizer === "boolean" &&
       userInfo.name.trim() !== "" &&
+      userInfo.password.trim() !== "" &&
       /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userInfo.email)
     ) {
       return { status: true, message: "Validated Successfully" };
@@ -50,6 +51,7 @@ export class Validator {
   }
 
   static isValidObjectId(id) {
+    console.log(mongoose.Types.ObjectId.isValid(id));
     return mongoose.Types.ObjectId.isValid(id);
   }
 

@@ -8,6 +8,11 @@ import { Event } from "./models/event.js";
 import { compareSync, hashSync } from "bcrypt";
 import jwt from "jsonwebtoken";
 
+console.log(
+  "mongoose.Types.ObjectId.isValid(id)",
+  mongoose.Types.ObjectId.isValid("6651f4d94e30dd91ff9c5fc6")
+);
+
 dotenv.config();
 const app = express();
 app.use(express.json());
