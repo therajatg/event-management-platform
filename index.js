@@ -14,7 +14,7 @@ console.log(
 );
 
 dotenv.config();
-const app = express();
+export const app = express();
 app.use(express.json());
 
 app.post("/register", (req, res) => {
@@ -26,10 +26,11 @@ app.post("/register", (req, res) => {
     });
     user
       .save()
-      .then((res) =>
+      .then((response) =>
         res.status(200).json({ message: "User creation successful" })
       )
       .catch((err) => {
+        console.log(err);
         if (err.code === 11000) {
           return res.status(400).json({ message: "Email already present" });
         } else {
@@ -191,9 +192,10 @@ app.post("/events/:id/register", verifyToken, (req, res) => {
   }
 });
 
-if (process.env.NODE_ENV != "test") {
+if (process.env.NODE_ENV !== "test") {
   try {
-    mongoose.connect("mongodb://localhost:27017/eventsdb");
+    mongoose.connect(process.env.MONGO_URI_DEV);
+    console.log("cwejncewnejfncwjk");
   } catch (error) {
     console.log("Failed while trying to establish connection with mongodb");
   }
@@ -206,3 +208,5 @@ app.listen(process.env.PORT, (err) => {
     console.log(`Server started on ${process.env.PORT}`);
   }
 });
+
+//previous =>  "test": "nyc mocha --recursive 'test/**/*.js' --exit"

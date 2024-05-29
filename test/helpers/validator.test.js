@@ -1,6 +1,8 @@
 import { expect } from "chai";
 import { Validator } from "../../helpers/validator.js";
 
+// global.disableMongoHooks = true;
+
 describe("Testing the validate userInfo functionality", () => {
   let userInfo;
   beforeEach((done) => {
@@ -10,6 +12,7 @@ describe("Testing the validate userInfo functionality", () => {
       name: "rohit",
       isOrganizer: false,
     };
+    // this.skipMongoHooks = true;
     done();
   });
 
@@ -64,6 +67,7 @@ describe("Testing the validate eventInfo functionality", () => {
       participants: ["6651dcb377cc599c19045edb"],
       organizer: "6651dcb377cc599c19045edb",
     };
+    // this.skipMongoHooks = true;
     done();
   });
 
@@ -101,7 +105,6 @@ describe("Testing the validate eventInfo functionality", () => {
   it("10. Validating the event info - fails if the organizer id is invalid", (done) => {
     eventInfo.organizer = "6651f4d94e30dd91ff9c5fc";
     let response = Validator.validateEventInfo(eventInfo);
-    console.log(response);
     expect(response.status).eq(false);
     expect(response.message).eq("Event info is malformed");
     done();

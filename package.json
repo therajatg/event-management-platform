@@ -4,7 +4,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "nyc mocha --recursive 'test/**/*.js' --exit"
+    "test": "NODE_ENV=test mocha --recursive test/**/*.js --exit"
   },
   "keywords": [],
   "author": "",
@@ -20,6 +20,7 @@
   },
   "devDependencies": {
     "chai": "^5.1.1",
+    "chai-http": "^4.4.0",
     "mocha": "^10.4.0",
     "nyc": "^15.1.0"
   }
