@@ -8,35 +8,27 @@ import { Event } from "./models/event.js";
 import { compareSync, hashSync } from "bcrypt";
 import jwt from "jsonwebtoken";
 
-console.log(
-  "mongoose.Types.ObjectId.isValid(id)",
-  mongoose.Types.ObjectId.isValid("6651f4d94e30dd91ff9c5fc6")
-);
-
 dotenv.config();
 export const app = express();
 app.use(express.json());
 
-app.post("/register", (req, res) => {
+app.post("/register", async (req, res) => {
   const validatorResponse = Validator.validateUserInfo(req.body);
   if (validatorResponse.status) {
     const user = new User({
       ...req.body,
       password: hashSync(req.body.password, 8),
     });
-    user
-      .save()
-      .then((response) =>
-        res.status(200).json({ message: "User creation successful" })
-      )
-      .catch((err) => {
-        console.log(err);
-        if (err.code === 11000) {
-          return res.status(400).json({ message: "Email already present" });
-        } else {
-          return res.status(500).json({ message: "Internal Server Error" });
-        }
-      });
+    try {
+      await user.save();
+      res.status(200).json({ message: "User creation successful" });
+    } catch (err) {
+      if (err.code === 11000) {
+        return res.status(400).json({ message: "Email already present" });
+      } else {
+        return res.status(500).json({ message: "Internal Server Error" });
+      }
+    }
   } else {
     res.status(400).json({ message: validatorResponse.message });
   }
@@ -192,7 +184,7 @@ app.post("/events/:id/register", verifyToken, (req, res) => {
   }
 });
 
-if (process.env.NODE_ENV !== "test") {
+if (process.env.NODE_ENV === "development") {
   try {
     mongoose.connect(process.env.MONGO_URI_DEV);
     console.log("cwejncewnejfncwjk");

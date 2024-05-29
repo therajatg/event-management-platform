@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 mongoose.Promise = global.Promise;
 import mongoose from "mongoose";
 import dotenv from "dotenv";
+import { User } from "../../models/user.js";
 dotenv.config({ path: ".env.test" });
 
 const chai = use(chaiHttp);
@@ -13,35 +14,33 @@ use(chaiHttp);
 
 describe("Testing all routes with actual MongoDB calls", () => {
   beforeEach((done) => {
-    console.log("Running before each unit test");
-    mongoose.connection.collections.events.drop(() => {
-      mongoose.connection.collections.users.drop(() => done());
-    });
+    console.log("Running before each test");
+    User.deleteMany({}).then(() => done());
+    // mongoose.connection.collections.users.drop().then(() => done());
   });
 
   before((done) => {
     console.log("Running before all unit tests");
-    try {
-      mongoose.connect(process.env.MONGO_URI_TEST);
-      console.log("successfully connected to DB");
-      done();
-    } catch (error) {
-      console.log("Failed while connecting with MongoDB");
-      done();
-    }
+    mongoose
+      .connect(process.env.MONGO_URI_TEST)
+      .then(() => {
+        console.log("successfully connected to DB");
+        done();
+      })
+      .catch((error) => {
+        console.log("Failed while connecting with MongoDB");
+        done(error);
+      });
   });
 
   afterEach((done) => {
-    console.log("Running after each unit test");
-    mongoose.connection.collections.events.drop(() => {
-      mongoose.connection.collections.users.drop(() => done());
-    });
+    console.log("Running after each test");
+    User.deleteMany({}).then(() => done());
+    // mongoose.connection.collections.users.drop().then(() => done());
   });
 
   after((done) => {
-    console.log("Running after all unit tests");
-    mongoose.disconnect();
-    done();
+    mongoose.disconnect().then(() => done());
   });
 
   describe("Verifies the signup flow", () => {
@@ -81,26 +80,20 @@ describe("Testing all routes with actual MongoDB calls", () => {
     });
 
     it("3. Failure when the user is already registered", (done) => {
-      console.log("I am here testing if here data is being cleared again");
       chai
         .request(server)
         .post("/register")
         .send(signupBody)
         .end((err, res) => {
           if (err) if (err) return done(err);
-          //   if (res)
           chai
             .request(server)
             .post("/register")
             .send(signupBody)
             .end((err, res) => {
-              //   console.log("Is this being executed at all");
               if (err) return done(err);
               expect(res.status).eq(400);
               expect(res.body.message).eq("Email already present");
-              //   console.log(
-              //     "I am here testing if here data is being cleared again"
-              //   );
               done();
             });
         });
@@ -115,10 +108,7 @@ describe("Testing all routes with actual MongoDB calls", () => {
       isOrganizer: false,
     };
 
-    let loginBody = {
-      email: "some@gmail.com",
-      password: "1234567",
-    };
+    let loginBody;
 
     beforeEach((done) => {
       chai
@@ -128,6 +118,11 @@ describe("Testing all routes with actual MongoDB calls", () => {
         .end((err, res) => {
           done();
         });
+
+      loginBody = {
+        email: "some@gmail.com",
+        password: "1234567",
+      };
     });
 
     it("4. Successful login by the user", (done) => {
@@ -140,6 +135,32 @@ describe("Testing all routes with actual MongoDB calls", () => {
           expect(res.body).to.have.property("userId");
           expect(res.body).to.have.property("accessToken");
           expect(res.body.accessToken).to.not.be.undefined;
+          done();
+        });
+    });
+
+    it("5. User login fails if the user email is not found in the database", (done) => {
+      loginBody.email = "123@gmail.com";
+      chai
+        .request(server)
+        .post("/login")
+        .send(loginBody)
+        .end((err, res) => {
+          expect(res.status).eq(404);
+          expect(res.body.message).eq("User not found");
+          done();
+        });
+    });
+
+    it("6. User login fails if the password is invalid", (done) => {
+      loginBody.password = "123";
+      chai
+        .request(server)
+        .post("/login")
+        .send(loginBody)
+        .end((err, res) => {
+          expect(res.status).eq(401);
+          expect(res.body.message).eq("Invalid Password");
           done();
         });
     });
