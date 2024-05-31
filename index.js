@@ -21,7 +21,7 @@ app.post("/register", async (req, res) => {
     });
     try {
       await user.save();
-      res.status(200).json({ message: "User creation successful" });
+      res.status(200).json({ message: "User creation successful", user });
     } catch (err) {
       if (err.code === 11000) {
         return res.status(400).json({ message: "Email already present" });
@@ -68,20 +68,23 @@ app.post("/login", (req, res) => {
 app.post("/events", verifyToken, (req, res) => {
   if (req.user) {
     try {
-      const validatorResponse = Validator.validateEventInfo(req.body);
+      const eventInfo = req.body;
+      eventInfo.participants = [];
+      eventInfo.organizer = req.user._id;
+      const validatorResponse = Validator.validateEventInfo(eventInfo);
       if (validatorResponse.status) {
         if (!req.user.isOrganizer) {
           return res
             .status(400)
             .json({ message: "Participants cannot organize an event" });
         }
-        const event = new Event(req.body);
+        const event = new Event(eventInfo);
         event
           .save()
           .then((event) => {
             return res
               .status(200)
-              .json({ message: "Event Creation Successful" });
+              .json({ message: "Event Creation Successful", event });
           })
           .catch((err) => {
             if (err.status === 400) {
@@ -96,21 +99,26 @@ app.post("/events", verifyToken, (req, res) => {
       return res.status(500).json({ message: "Internal Server Error" });
     }
   } else {
-    return res.status(req.status).json({ message: req.message });
+    return res
+      .status(req.status)
+      .json({ message: req.message, user: req.user });
   }
 });
 
 app.put("/events/:id", verifyToken, (req, res) => {
+  // return res.status(200).json("SOmething is awesome");
   if (req.user) {
     try {
-      const validatorResponse = Validator.validateEventInfo(req.body);
+      const eventInfo = req.body;
+      eventInfo.organizer = req.user._id;
+      const validatorResponse = Validator.validateEventInfo(eventInfo);
       if (validatorResponse.status) {
         if (!req.user.isOrganizer) {
           return res
             .status(400)
             .json({ message: "Participants cannot modify an event" });
         }
-        Event.findOneAndUpdate({ _id: req.params.id }, req.body, {
+        Event.findOneAndUpdate({ _id: req.params.id }, eventInfo, {
           new: true,
           runValidators: true,
         })
